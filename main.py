@@ -3,11 +3,6 @@ import asyncio
 import os
 from typing import List
 
-# # この環境ではプロセスプールの生成が許可されないため NiceGUI のプロセスプールを無効化する。
-# # run.cpu_bound を使わない前提で PermissionError による起動失敗を防ぐ。
-# run.process_pool = None
-# run.setup = lambda: None
-
 # ====== パラメータ ======
 ROWS = 20
 COLS = 30
@@ -112,6 +107,37 @@ def set_speed(value: int):
   global speed_ms
   speed_ms = value
 
+def seed_default_pattern():
+  """
+  初期状態として、R-ペントミノと3方向のグライダーを配置する。
+  それぞれが干渉しつつ盤面が賑やかに変化する。
+  """
+  global grid
+  grid = [[0 for _ in range(COLS)] for _ in range(ROWS)]
+
+  def place(offsets, origin):
+    orr, occ = origin
+    for dr, dc in offsets:
+      r = (orr + dr) % ROWS
+      c = (occ + dc) % COLS
+      grid[r][c] = 1
+
+  # 混沌を生む R-ペントミノ（中心付近）
+  r_pentomino = [(0, 1), (0, 2), (1, 0), (1, 1), (2, 1)]
+  place(r_pentomino, (ROWS // 2 - 1, COLS // 2 - 1))
+
+  # 下右へ進むグライダー（左上）
+  glider_down_right = [(0, 1), (1, 2), (2, 0), (2, 1), (2, 2)]
+  place(glider_down_right, (1, 1))
+
+  # 下左へ進むように反転したグライダー（右上）
+  glider_down_left = [(0, 1), (1, 0), (2, 0), (2, 1), (2, 2)]
+  place(glider_down_left, (1, COLS - 5))
+
+  # 90度回転したグライダー（左下）
+  glider_up_right = [(1, 2), (2, 1), (0, 0), (1, 0), (2, 0)]
+  place(glider_up_right, (ROWS - 5, COLS // 2 - 2))
+
 def make_toggle_handler(rr: int, cc: int):
   """
   指定したセル (rr, cc) の状態をトグルするハンドラを生成する。
@@ -148,6 +174,7 @@ def build_ui():
           row_buttons.append(b)
       cell_buttons.append(row_buttons)
 
+  seed_default_pattern()
   rebuild_grid()
 
 # ====== 非同期タスク起動 ======
