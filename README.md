@@ -127,6 +127,7 @@ uv run python -m pytest
 life_lab/
 ├── main.py        # メインアプリ
 ├── pyproject.toml # uv 管理ファイル
+├── tests/         # pytest テスト
 └── README.md      # このファイル
 ```
 
