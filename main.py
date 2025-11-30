@@ -13,6 +13,7 @@ running = False
 speed_ms = 200 # 世代更新間隔（ミリ秒）
 cell_buttons: List[List[ui.button]] = []
 start_button = None
+seed_button = None
 
 def count_neighbors(r: int, c: int) -> int:
   """
@@ -77,6 +78,18 @@ async def run_loop():
       rebuild_grid()
     await asyncio.sleep(speed_ms / 1000)
 
+def update_control_states():
+  """
+  再生状態に応じてボタン表示と活性/非活性を切り替える。
+  """
+  start_button.text = '⏸ ストップ' if running else '▶ スタート'
+  if seed_button is None:
+    return
+  if running:
+    seed_button.disable()
+  else:
+    seed_button.enable()
+
 def toggle_running():
   """
   シミュレーションの実行／停止を切り替える。
@@ -85,10 +98,7 @@ def toggle_running():
   """
   global running
   running = not running
-  if running:
-    start_button.text = '⏸ ストップ'
-  else:
-    start_button.text = '▶ スタート'
+  update_control_states()
 
 def clear_grid():
   """
@@ -138,6 +148,15 @@ def seed_default_pattern():
   glider_up_right = [(1, 2), (2, 1), (0, 0), (1, 0), (2, 0)]
   place(glider_up_right, (ROWS - 5, COLS // 2 - 2))
 
+def seed_pattern_if_stopped():
+  """
+  停止中のみ初期パターンを再配置する。
+  """
+  if running:
+    return
+  seed_default_pattern()
+  rebuild_grid()
+
 def make_toggle_handler(rr: int, cc: int):
   """
   指定したセル (rr, cc) の状態をトグルするハンドラを生成する。
@@ -151,7 +170,7 @@ def make_toggle_handler(rr: int, cc: int):
 # ====== UI構築 ======
 
 def build_ui():
-  global start_button, cell_buttons
+  global start_button, seed_button, cell_buttons
   cell_buttons = []
 
   with ui.row().classes('w-full justify-between items-center'):
@@ -163,6 +182,7 @@ def build_ui():
     ui.button('⏭ 1ステップ', on_click=lambda: (step(), rebuild_grid()))
     speed_slider = ui.slider(min=50, max=1000, value=speed_ms, step=50, on_change=lambda e: set_speed(e.value))
     speed_slider.label = 'スピード（ms）'
+    seed_button = ui.button('初期パターン再配置', on_click=seed_pattern_if_stopped)
 
   # グリッド描画
   with ui.column().classes('gap-0'):
@@ -176,6 +196,7 @@ def build_ui():
 
   seed_default_pattern()
   rebuild_grid()
+  update_control_states()
 
 # ====== 非同期タスク起動 ======
 
