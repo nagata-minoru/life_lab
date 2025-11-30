@@ -44,7 +44,7 @@ curl -Ls https://astral.sh/uv/install.sh | sh
 ## 🚀 起動方法
 
 ```bash
-git clone <このリポジトリのURL>
+git clone https://github.com/nagata-minoru/life_lab
 cd life_lab
 
 uv add nicegui
