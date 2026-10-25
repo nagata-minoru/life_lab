@@ -8,11 +8,12 @@ class DummyButton:
 
   def __init__(self):
     """スタブボタンの状態を初期化する。"""
-    self.last_props = None
+    self._props = {}
+    self.update_count = 0
 
-  def props(self, value):
-    """NiceGUIのprops呼び出しの代替として値を記録する。"""
-    self.last_props = value
+  def update(self):
+    """NiceGUIのupdate呼び出しの代替として回数を記録する。"""
+    self.update_count += 1
 
 
 @pytest.fixture(autouse=True)
@@ -70,8 +71,9 @@ def test_make_toggle_handler_updates_grid_and_button_state():
 
   toggle()
   assert main.grid[0][0] == 1
-  assert main.cell_buttons[0][0].last_props == "color=red"
+  assert main.cell_buttons[0][0]._props == {"color": "green"}
+  assert main.cell_buttons[0][0].update_count == 1
 
   toggle()
   assert main.grid[0][0] == 0
-  assert main.cell_buttons[0][0].last_props == "outline color=gray"
+  assert main.cell_buttons[0][0]._props == {"outline": True, "color": "gray"}
